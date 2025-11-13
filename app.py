@@ -5,10 +5,16 @@ import os
 
 app = Flask(__name__)
 
+
+@app.route("/")
+def home():
+    return "welcome"
+
+
 # === ROUTE 1: SEARCH SONG ===
-@app.route('/search-song', methods=['GET'])
+@app.route("/search-song", methods=["GET"])
 def search_song():
-    query = request.args.get('q')
+    query = request.args.get("q")
     if not query:
         return jsonify({"error": "Missing query parameter 'q'"}), 400
 
@@ -16,20 +22,22 @@ def search_song():
     results = []
 
     for video in videos.get("result", []):
-        results.append({
-            "title": video.get("title"),
-            "duration": video.get("duration"),
-            "url": video.get("link"),
-            "thumbnail": video.get("thumbnails", [{}])[0].get("url")
-        })
+        results.append(
+            {
+                "title": video.get("title"),
+                "duration": video.get("duration"),
+                "url": video.get("link"),
+                "thumbnail": video.get("thumbnails", [{}])[0].get("url"),
+            }
+        )
 
     return jsonify(results)
 
 
 # === ROUTE 2: DOWNLOAD SONG ===
-@app.route('/download-song', methods=['GET'])
+@app.route("/download-song", methods=["GET"])
 def download_song():
-    url = request.args.get('url')
+    url = request.args.get("url")
     if not url:
         return jsonify({"error": "Missing query parameter 'url'"}), 400
 
@@ -55,5 +63,4 @@ def download_song():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8080)
-
+    app.run(host="0.0.0.0")
