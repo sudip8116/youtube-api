@@ -1,66 +1,44 @@
-from flask import Flask, request, jsonify, send_file
-from youtubesearchpython import VideosSearch
-from pytubefix import YouTube
-import os
+import json
+from flask import Flask, Response, request, jsonify
+from youtube_api import YoutubeAPI
+
 
 app = Flask(__name__)
+youtube_api = YoutubeAPI()
 
 
 @app.route("/")
 def home():
-    return "welcome"
+    return Response("Welcome to Youtube API", headers={"live": True})
 
 
 # === ROUTE 1: SEARCH SONG ===
 @app.route("/search-song", methods=["GET"])
 def search_song():
-    query = request.args.get("q")
+    query = request.args.get("query")
+    try:
+        limit = min(int(request.args.get("limit")), 3)
+    except:
+        limit = 3
+
     if not query:
         return jsonify({"error": "Missing query parameter 'q'"}), 400
 
-    videos = VideosSearch(query, limit=5).result()
-    results = []
-
-    for video in videos.get("result", []):
-        results.append(
-            {
-                "title": video.get("title"),
-                "duration": video.get("duration"),
-                "url": video.get("link"),
-                "thumbnail": video.get("thumbnails", [{}])[0].get("url"),
-            }
-        )
-
-    return jsonify(results)
+    return json.dumps(youtube_api.search_video(query, limit))
 
 
 # === ROUTE 2: DOWNLOAD SONG ===
 @app.route("/download-song", methods=["GET"])
 def download_song():
-    url = request.args.get("url")
-    if not url:
-        return jsonify({"error": "Missing query parameter 'url'"}), 400
-
+    link = request.args.get("link")
+    if not link:
+        return Response(b"", mimetype="application/octet-stream")
     try:
-        yt = YouTube(url)
-        stream = yt.streams.filter(only_audio=True).first()
-        if not stream:
-            return jsonify({"error": "No audio stream found"}), 404
-
-        out_file = stream.download(filename="song.mp4")
-        new_file = "song.mp3"
-        os.rename(out_file, new_file)
-
-        return send_file(new_file, as_attachment=True)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-    finally:
-        # Clean up old files
-        if os.path.exists("song.mp3"):
-            os.remove("song.mp3")
-        if os.path.exists("song.mp4"):
-            os.remove("song.mp4")
+        buffer = youtube_api.get_audio_buffer(link)
+        return Response(buffer, mimetype="application/octet-stream")
+    except:
+        return Response(b"", mimetype="application/octet-stream")
 
 
-# if __name__ == "__main__":
-#     app.run(host="0.0.0.0")
+if __name__ == "__main__":
+    app.run(host="0.0.0.0")
