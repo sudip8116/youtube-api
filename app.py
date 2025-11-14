@@ -40,5 +40,5 @@ def download_song():
         return Response(b"", mimetype="application/octet-stream")
 
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0")
+# if __name__ == "__main__":
+#     app.run(host="0.0.0.0")
