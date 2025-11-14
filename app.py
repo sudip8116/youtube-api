@@ -1,7 +1,6 @@
 import json
-from flask import Flask, Response, request, jsonify
+from flask import Flask, Response, request
 from youtube_api import YoutubeAPI
-
 
 app = Flask(__name__)
 youtube_api = YoutubeAPI()
@@ -27,7 +26,6 @@ def search_song():
     try:
         result = youtube_api.search_video(query, limit)
         return json.dumps(result)
-
     except:
         return "Failed to fetch query"
 
@@ -36,14 +34,12 @@ def search_song():
 @app.route("/download-song", methods=["GET"])
 def download_song():
     link = request.args.get("link")
+
     if not link:
         return Response(b"", mimetype="application/octet-stream")
+
     try:
-        buffer = youtube_api.get_audio_buffer(link)
-        return Response(buffer, mimetype="application/octet-stream")
+        audio_bytes = youtube_api.get_audio_buffer(link)
+        return Response(audio_bytes, mimetype="audio/webm")
     except:
         return Response(b"", mimetype="application/octet-stream")
-
-
-# if __name__ == "__main__":
-#     app.run(host="0.0.0.0")

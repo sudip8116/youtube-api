@@ -5,10 +5,10 @@ from pytubefix import YouTube
 
 class YoutubeAPI:
     def __init__(self):
-        self.max_video_length = 10  # minute
+        self.max_video_length = 10  # minutes
         
     def search_video(self, query: str, limit: int):
-        videos = VideosSearch(query, limit=5).result()
+        videos = VideosSearch(query, limit=limit).result()
 
         results = []
 
@@ -27,16 +27,15 @@ class YoutubeAPI:
         parts = duration.split(":")
         if len(parts) == 2:
             try:
-                _min = int(parts[0])
-                if _min <= self.max_video_length:
-                    return True
+                minutes = int(parts[0])
+                return minutes <= self.max_video_length
             except:
                 return False
         return False
 
-    def download_audio(self, link: str):
-        youtube = YouTube(link)
-        audio = youtube.streams.filter(only_audio=True).order_by("abr").desc().first()
+    def get_audio_buffer(self, link: str):
+        yt = YouTube(link)
+        audio = yt.streams.filter(only_audio=True).order_by("abr").desc().first()
 
         buffer = BytesIO()
         audio.stream_to_buffer(buffer)
