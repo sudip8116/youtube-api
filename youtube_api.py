@@ -6,7 +6,7 @@ from pytubefix import YouTube
 class YoutubeAPI:
     def __init__(self):
         self.max_video_length = 10  # minutes
-        
+
     def search_video(self, query: str, limit: int):
         videos = VideosSearch(query, limit=limit).result()
 
@@ -33,12 +33,7 @@ class YoutubeAPI:
                 return False
         return False
 
-    def get_audio_buffer(self, link: str):
+    def get_audio_url(self, link):
         yt = YouTube(link)
         audio = yt.streams.filter(only_audio=True).order_by("abr").desc().first()
-
-        buffer = BytesIO()
-        audio.stream_to_buffer(buffer)
-        buffer.seek(0)
-
-        return buffer.read()
+        return audio.url  # direct GoogleVideo URL

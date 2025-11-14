@@ -21,25 +21,28 @@ def search_song():
         limit = 3
 
     if not query:
-        return "Missing query parameter"
+        return json.dumps({"error": True})
 
     try:
         result = youtube_api.search_video(query, limit)
         return json.dumps(result)
     except:
-        return "Failed to fetch query"
+        return json.dumps({"error": True})
 
 
 # === ROUTE 2: DOWNLOAD SONG ===
-@app.route("/download-song", methods=["GET"])
+@app.route("/download-song")
 def download_song():
     link = request.args.get("link")
-
     if not link:
-        return Response(b"", mimetype="application/octet-stream")
+        return "error"
 
     try:
-        audio_bytes = youtube_api.get_audio_buffer(link)
-        return Response(audio_bytes, mimetype="audio/webm")
-    except:
-        return Response(b"", mimetype="application/octet-stream")
+        url = youtube_api.get_audio_url(link)
+        return url
+    except Exception as e:
+        return "error"
+
+
+if __name__ == "__main__":
+    app.run("0.0.0.0")
