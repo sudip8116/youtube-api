@@ -22,9 +22,14 @@ def search_song():
         limit = 3
 
     if not query:
-        return jsonify({"error": "Missing query parameter 'q'"}), 400
+        return "Missing query parameter"
 
-    return json.dumps(youtube_api.search_video(query, limit))
+    try:
+        result = youtube_api.search_video(query, limit)
+        return json.dumps(result)
+
+    except:
+        return "Failed to fetch query"
 
 
 # === ROUTE 2: DOWNLOAD SONG ===
