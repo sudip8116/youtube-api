@@ -33,12 +33,12 @@ def search_song():
 # === ROUTE 2: DOWNLOAD SONG ===
 @app.route("/get-audio-url")
 def download_song():
-    link = request.args.get("link")
+    link = request.args.get("id")
     if not link:
         return "error"
 
     try:
-        url = youtube_api.get_audio_url(link)
+        url = youtube_api.get_audio_url(f"https://www.youtube.com/watch?v={link}")
         return url
     except Exception as e:
         return "error"
