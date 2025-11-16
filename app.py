@@ -16,22 +16,22 @@ def home():
 def search_song():
     query = request.args.get("query")
     try:
-        limit = min(int(request.args.get("limit")), 3)
+        limit = min(int(request.args.get("limit")), 5)
     except:
-        limit = 3
+        limit = 5
 
     if not query:
         return json.dumps({"error": True})
 
     try:
         result = youtube_api.search_video(query, limit)
-        return json.dumps(result)
+        return json.dumps({"result": result})
     except:
         return json.dumps({"error": True})
 
 
 # === ROUTE 2: DOWNLOAD SONG ===
-@app.route("/download-song")
+@app.route("/get-audio-url")
 def download_song():
     link = request.args.get("link")
     if not link:
