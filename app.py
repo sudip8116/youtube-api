@@ -1,48 +1,65 @@
-import json
-from flask import Flask, Response, request
-from youtube_api import YoutubeAPI
+from flask import Flask, request, jsonify
+import yt_dlp
 
 app = Flask(__name__)
-youtube_api = YoutubeAPI()
-
 
 @app.route("/")
 def home():
-    return Response("Welcome to Youtube API", headers={"live": True})
+    return jsonify({
+        "status": "ok",
+        "routes": ["/search?q=", "/get-url?url="]
+    })
 
 
-# === ROUTE 1: SEARCH SONG ===
-@app.route("/search-song", methods=["GET"])
-def search_song():
-    query = request.args.get("query")
-    try:
-        limit = min(int(request.args.get("limit")), 5)
-    except:
-        limit = 5
-
+@app.route("/search")
+def search():
+    query = request.args.get("q")
     if not query:
-        return json.dumps({"error": True})
+        return jsonify({"error": "q parameter missing"}), 400
 
-    try:
-        result = youtube_api.search_video(query, limit)
-        return json.dumps({"result": result})
-    except:
-        return json.dumps({"error": True})
+    ydl_opts = {
+        "quiet": True,
+        "extract_flat": True,
+        "skip_download": True
+    }
+
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        result = ydl.extract_info(f"ytsearch10:{query}", download=False)
+
+    videos = []
+    for v in result.get("entries", []):
+        videos.append({
+            "title": v.get("title"),
+            "url": f"https://www.youtube.com/watch?v={v.get('id')}",
+            "duration": v.get("duration"),
+            "channel": v.get("uploader")
+        })
+
+    return jsonify(videos)
 
 
-# === ROUTE 2: DOWNLOAD SONG ===
-@app.route("/get-audio-url")
-def download_song():
-    link = request.args.get("id")
-    if not link:
-        return "error"
+@app.route("/get-url")
+def get_audio_url():
+    video_url = request.args.get("url")
+    if not video_url:
+        return jsonify({"error": "url parameter missing"}), 400
 
-    try:
-        url = youtube_api.get_audio_url(f"https://www.youtube.com/watch?v={link}")
-        return url
-    except Exception as e:
-        return "error"
+    ydl_opts = {
+        "quiet": True,
+        "skip_download": True,
+        "format": "bestaudio/best"
+    }
+
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info = ydl.extract_info(video_url, download=False)
+
+    return jsonify({
+        "title": info.get("title"),
+        "audio_url": info["url"],
+        "ext": info.get("ext"),
+        "filesize": info.get("filesize")
+    })
 
 
-# if __name__ == "__main__":
-#     app.run("0.0.0.0")
+#if __name__ == "__main__":
+   # app.run(host="0.0.0.0", port=5000, debug=True)
